@@ -29,7 +29,7 @@ export function AppSidebar() {
           <img
             src={epochLogo}
             alt="Epoch"
-            className="size-8 shrink-0 rounded-lg object-cover"
+            className="size-8 shrink-0 object-contain"
           />
           <div className="grid leading-tight group-data-[collapsible=icon]:hidden">
             <span className="font-semibold">Epoch</span>
