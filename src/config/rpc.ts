@@ -1,6 +1,5 @@
 import {
   arbitrum,
-  arbitrumSepolia,
   base,
   baseSepolia,
   optimism,
@@ -23,12 +22,8 @@ export const RPC_ENDPOINTS: Record<number, string> = {
     "https://rpc.ankr.com/base_sepolia/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
   11155111:
     "https://rpc.ankr.com/eth_sepolia/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  421614:
-    "https://rpc.ankr.com/arbitrum_sepolia/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
   10143:
     "https://rpc.ankr.com/monad_testnet/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  80002:
-    "https://rpc.ankr.com/polygon_amoy/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
   129399: "https://rpc.tatara.katanarpc.com/",
   11155931: "https://testnet.riselabs.xyz",
 };
@@ -37,7 +32,6 @@ const VIEM_CHAIN_RPCS = [
   sepolia,
   baseSepolia,
   optimismSepolia,
-  arbitrumSepolia,
   polygon,
   arbitrum,
   base,

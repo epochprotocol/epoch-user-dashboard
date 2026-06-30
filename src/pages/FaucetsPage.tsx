@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import {
-  arbitrumSepolia,
   baseSepolia,
   optimismSepolia,
   sepolia,
@@ -21,7 +20,7 @@ import { MidenFaucetSection } from "@/components/faucet/MidenFaucetSection";
 import { getTokensForChain, isTestnetChain } from "../config/web3";
 import { getChainName } from "../utils/chains";
 
-const TESTNETS = [sepolia, baseSepolia, optimismSepolia, arbitrumSepolia];
+const TESTNETS = [sepolia, baseSepolia, optimismSepolia];
 
 export default function FaucetsPage() {
   const { isConnected } = useAccount();
