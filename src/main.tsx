@@ -9,6 +9,7 @@ import "./index.css";
 import FaucetsPage from "./pages/FaucetsPage.tsx";
 import FundsPage from "./pages/FundsPage.tsx";
 import OverviewPage from "./pages/OverviewPage.tsx";
+import CreateMidenFaucetsPage from "./pages/dev/CreateMidenFaucetsPage.tsx";
 import { AppLayout } from "./components/layout/AppLayout";
 import { Toaster } from "@/components/ui/sonner";
 import { config } from "./config/wagmi";
@@ -57,6 +58,12 @@ function App() {
                     <Route index element={<OverviewPage />} />
                     <Route path="/faucets" element={<FaucetsPage />} />
                     <Route path="/funds" element={<FundsPage />} />
+                    {import.meta.env.DEV && (
+                      <Route
+                        path="/dev/miden-faucets"
+                        element={<CreateMidenFaucetsPage />}
+                      />
+                    )}
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Route>
                 </Routes>
