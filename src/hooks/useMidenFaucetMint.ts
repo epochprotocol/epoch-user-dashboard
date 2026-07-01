@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { parseUnits } from "viem";
 import { getMidenClient } from "@/lib/midenClient";
-import { ensureFaucets } from "@/lib/midenFaucets";
+import { ensureFaucets, refreshFaucetForMint } from "@/lib/midenFaucets";
 import {
   MIDEN_FAUCETS_CONFIGURED,
   type MidenFaucetConfig,
@@ -64,6 +64,8 @@ export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
       const ids = await ensureFaucets(client);
       const faucetId = ids[faucet.symbol];
       if (!faucetId) throw new Error(`No faucet resolved for ${faucet.symbol}`);
+
+      await refreshFaucetForMint(client, faucetId);
 
       const value = parseUnits(amount, faucet.decimals);
       const { txId } = await client.transactions.mint({

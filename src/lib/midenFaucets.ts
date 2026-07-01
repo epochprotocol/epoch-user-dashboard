@@ -52,6 +52,22 @@ export function resetFaucetCache(): void {
   }
 }
 
+/**
+ * Refresh a faucet account's on-chain commitment before minting. The keystore
+ * signing key survives import; only vault/nonce state is updated from the network.
+ */
+export async function refreshFaucetForMint(
+  client: MidenClient,
+  faucetId: string,
+): Promise<void> {
+  await client.sync();
+  try {
+    await client.accounts.import(faucetId);
+  } catch {
+    // Not yet on-chain — genesis / AccountFile state is still correct.
+  }
+}
+
 async function deriveAll(client: MidenClient): Promise<Record<string, string>> {
   const symbols = MIDEN_FAUCETS.map((f) => f.symbol);
 
