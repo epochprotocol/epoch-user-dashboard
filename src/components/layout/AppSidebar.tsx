@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { Droplets, LayoutDashboard, Wallet } from "lucide-react";
+import epochLogo from "@/assets/epoch-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -25,9 +26,11 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-            E
-          </div>
+          <img
+            src={epochLogo}
+            alt="Epoch"
+            className="size-8 shrink-0 object-contain"
+          />
           <div className="grid leading-tight group-data-[collapsible=icon]:hidden">
             <span className="font-semibold">Epoch</span>
             <span className="text-xs text-muted-foreground">Dashboard</span>
