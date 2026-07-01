@@ -1,20 +1,30 @@
-import type { MidenClient } from "@miden-sdk/miden-sdk";
+import type { AccountId, MidenClient } from "@miden-sdk/miden-sdk";
 import { parseUnits } from "viem";
 import { FUNGIBLE_FAUCET, MIDEN_FAUCETS } from "@/constants/miden-faucets";
+import {
+  MIDEN_FAUCET_FILES,
+  hasAllFaucetFiles,
+  base64ToBytes,
+  bytesToBase64,
+} from "@/constants/miden-faucet-files";
 
 /**
- * Derives the faucet accounts from the seeded client and returns
- * `{ symbol -> faucetId }`.
+ * Resolves the canonical faucet accounts into the client's keystore and returns
+ * `{ symbol -> faucetId }`. The returned id is ALWAYS the one present in the local
+ * store, so callers can mint from it directly.
  *
- * Because the client RNG is seeded, creating the faucets in MIDEN_FAUCETS order
- * is deterministic: the same seed + order reproduces the same ids + keys in any
- * browser, and inserts the signing keys into this client's keystore so it can
- * mint. We create the WHOLE list (not just the requested token) so ordering — and
- * therefore the derived ids — stays consistent.
+ * PREFERRED PATH — committed AccountFiles (see miden-faucet-files.ts):
+ *   Each faucet is imported from a committed base64 AccountFile. A faucet id =
+ *   hash(init_seed + code + storage) and the faucet-create API takes no init_seed,
+ *   so seed-derivation cannot reproduce a faucet id across stores. Importing a
+ *   saved AccountFile does — same id + signing key in every browser, forever.
  *
- * The resulting ids are cached in localStorage (per browser) so reloads don't
- * re-create (which would throw "already tracked"); the keys themselves live in
- * the client's IndexedDB keystore. Memoised per tab.
+ * FALLBACK PATH — seed-derivation (only until files are committed):
+ *   `client.accounts.create()` mints a fresh, non-reproducible faucet per clean
+ *   store — the exact bug that produces look-alike tokens. Kept only so the app
+ *   works before the one-time export; warns loudly.
+ *
+ * Memoised per tab; ids also cached in localStorage for the fallback path.
  */
 const LS_KEY = "epoch-miden-faucet-ids";
 
@@ -32,7 +42,7 @@ export function ensureFaucets(
   return ensurePromise;
 }
 
-/** Force a fresh derivation (e.g. the dev "Create faucets" button). */
+/** Force a fresh derivation (e.g. the dev "Force re-derive" button). */
 export function resetFaucetCache(): void {
   ensurePromise = null;
   try {
@@ -42,14 +52,84 @@ export function resetFaucetCache(): void {
   }
 }
 
-async function deriveAll(
+async function deriveAll(client: MidenClient): Promise<Record<string, string>> {
+  const symbols = MIDEN_FAUCETS.map((f) => f.symbol);
+
+  if (hasAllFaucetFiles(symbols)) {
+    return importCanonicalFaucets(client);
+  }
+
+  console.warn(
+    "[miden faucets] No committed AccountFiles — using seed-derivation. Faucet " +
+      "ids are NOT reproducible across stores (faucet-create takes no init_seed), " +
+      "so this can spawn duplicate look-alike tokens. Fix: dev Faucets page → " +
+      "'Export faucet files' → commit the printed block into miden-faucet-files.ts.",
+  );
+  return createFromSeed(client);
+}
+
+/**
+ * Import each canonical faucet from its committed AccountFile. Idempotent: the id
+ * is read from the file itself (`AccountFile.accountId()`) and we skip the import
+ * if that account is already tracked. Returns the real in-store id per symbol.
+ */
+async function importCanonicalFaucets(
+  client: MidenClient,
+): Promise<Record<string, string>> {
+  const { AccountFile } = await import("@miden-sdk/miden-sdk");
+  const ids: Record<string, string> = {};
+
+  for (const faucet of MIDEN_FAUCETS) {
+    const b64 = MIDEN_FAUCET_FILES[faucet.symbol];
+    if (!b64)
+      throw new Error(`Missing committed AccountFile for ${faucet.symbol}`);
+
+    const file = AccountFile.deserialize(base64ToBytes(b64));
+    const id = file.accountId();
+
+    const existing = await client.accounts.get(id).catch(() => null);
+    if (!existing) {
+      await client.accounts.import({ file });
+    }
+    ids[faucet.symbol] = id.toString();
+  }
+
+  await client.sync(); // refresh on-chain state (nonces) for the imported faucets
+  return ids;
+}
+
+/**
+ * Export the canonical faucets to committable base64 AccountFiles. Calls
+ * {@link ensureFaucets} first (imports, or on a fresh deploy creates them), then
+ * exports each. Returns `{ ids, files }` for pasting into the constants files.
+ */
+export async function exportFaucetFiles(
+  client: MidenClient,
+): Promise<{ ids: Record<string, string>; files: Record<string, string> }> {
+  const ids = await ensureFaucets(client);
+  const { AccountId } = await import("@miden-sdk/miden-sdk");
+  const files: Record<string, string> = {};
+
+  for (const faucet of MIDEN_FAUCETS) {
+    const ref = toAccountIdRef(AccountId, ids[faucet.symbol]);
+    if (!ref)
+      throw new Error(`No id resolved for ${faucet.symbol}; cannot export`);
+    const file = await client.accounts.export(ref);
+    files[faucet.symbol] = bytesToBase64(file.serialize());
+  }
+
+  return { ids, files };
+}
+
+// ── seed-derivation fallback (legacy, non-reproducible) ─────────────────────
+async function createFromSeed(
   client: MidenClient,
 ): Promise<Record<string, string>> {
   const symbols = MIDEN_FAUCETS.map((f) => f.symbol);
 
   const cached = readCache();
   if (cached && symbols.every((s) => cached[s])) {
-    await client.sync(); // refresh on-chain state for current nonces
+    await client.sync();
     return cached;
   }
 
@@ -79,6 +159,22 @@ async function deriveAll(
   writeCache(ids);
   await client.sync();
   return ids;
+}
+
+// ── helpers ─────────────────────────────────────────────────────────────────
+function toAccountIdRef(
+  AccountIdCtor: typeof import("@miden-sdk/miden-sdk").AccountId,
+  id: string | undefined,
+): AccountId | null {
+  if (!id) return null;
+  const s = id.trim();
+  try {
+    return s.startsWith("0x")
+      ? AccountIdCtor.fromHex(s)
+      : AccountIdCtor.fromBech32(s);
+  } catch {
+    return null;
+  }
 }
 
 function isAlreadyExists(e: unknown): boolean {

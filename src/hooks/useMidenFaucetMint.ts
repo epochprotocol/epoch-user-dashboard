@@ -11,10 +11,11 @@ import { useNotification } from "./useNotification";
 /**
  * Mint a Miden faucet token straight from the browser, no backend.
  *
- * The Miden client is seeded (VITE_MIDEN_FAUCET_SEED), so {@link ensureFaucets}
- * deterministically re-derives every faucet account + key into the client's
- * keystore. We then call `transactions.mint()` to emit a public P2ID note to the
- * recipient; their wallet picks it up on its next sync and consumes it.
+ * {@link ensureFaucets} loads the faucet accounts (id + key) into the client's
+ * keystore — imported from committed AccountFiles when present (stable id in every
+ * browser), else seed-derived as a fallback. Either way it returns the id that is
+ * actually in the local store, which we mint from via `transactions.mint()` to
+ * emit a public P2ID note to the recipient; their wallet picks it up on next sync.
  */
 export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
   const { showNotification } = useNotification();
@@ -59,10 +60,10 @@ export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
           ? AccountId.fromHex(id.trim())
           : AccountId.fromBech32(id.trim());
 
-      // Re-derive every faucet from the seed; returns { symbol -> faucetId }.
+      // Load faucets into the keystore; returns { symbol -> in-store faucetId }.
       const ids = await ensureFaucets(client);
       const faucetId = ids[faucet.symbol];
-      if (!faucetId) throw new Error(`No faucet derived for ${faucet.symbol}`);
+      if (!faucetId) throw new Error(`No faucet resolved for ${faucet.symbol}`);
 
       const value = parseUnits(amount, faucet.decimals);
       const { txId } = await client.transactions.mint({

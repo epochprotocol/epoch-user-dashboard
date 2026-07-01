@@ -11,11 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { getMidenClient } from "@/lib/midenClient";
-import { ensureFaucets, resetFaucetCache } from "@/lib/midenFaucets";
 import {
-  MIDEN_FAUCETS,
-  MIDEN_FAUCET_SEED,
-} from "@/constants/miden-faucets";
+  ensureFaucets,
+  exportFaucetFiles,
+  resetFaucetCache,
+} from "@/lib/midenFaucets";
+import { MIDEN_FAUCETS, MIDEN_FAUCET_SEED } from "@/constants/miden-faucets";
 
 /**
  * DEV-ONLY. Creates/derives the faucet accounts from the seed and shows their
@@ -25,6 +26,7 @@ import {
 export default function CreateMidenFaucetsPage() {
   const [busy, setBusy] = useState(false);
   const [ids, setIds] = useState<Record<string, string> | null>(null);
+  const [filesBlock, setFilesBlock] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const seedSet = Boolean(MIDEN_FAUCET_SEED);
@@ -33,6 +35,7 @@ export default function CreateMidenFaucetsPage() {
     setBusy(true);
     setError(null);
     setIds(null);
+    setFilesBlock(null);
     try {
       if (fresh) resetFaucetCache();
       const client = await getMidenClient();
@@ -44,10 +47,29 @@ export default function CreateMidenFaucetsPage() {
     }
   };
 
+  const exportFiles = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const client = await getMidenClient();
+      const { ids: exportedIds, files } = await exportFaucetFiles(client);
+      setIds(exportedIds);
+      // Ready-to-commit JSON for src/constants/miden-faucet-files.json.
+      const ordered: Record<string, string> = {};
+      for (const f of MIDEN_FAUCETS) ordered[f.symbol] = files[f.symbol] ?? "";
+      setFilesBlock(JSON.stringify(ordered, null, 2));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   // {symbol, faucetId} block to paste into MIDEN_FAUCETS for explorer links (optional).
   const idBlock = ids
     ? MIDEN_FAUCETS.map(
-        (f) => `  { symbol: "${f.symbol}", faucetId: "${ids[f.symbol] ?? ""}" },`,
+        (f) =>
+          `  { symbol: "${f.symbol}", faucetId: "${ids[f.symbol] ?? ""}" },`,
       ).join("\n")
     : "";
 
@@ -59,8 +81,8 @@ export default function CreateMidenFaucetsPage() {
         </h2>
         <p className="text-sm text-muted-foreground">
           Create / derive the faucet accounts from the seed. Their ids and keys
-          come from <code className="font-mono">VITE_MIDEN_FAUCET_SEED</code> — no
-          account files stored.
+          come from <code className="font-mono">VITE_MIDEN_FAUCET_SEED</code> —
+          no account files stored.
         </p>
       </div>
 
@@ -68,8 +90,9 @@ export default function CreateMidenFaucetsPage() {
         <Alert variant="destructive">
           <AlertTitle>No seed configured</AlertTitle>
           <AlertDescription>
-            Set <code className="font-mono">VITE_MIDEN_FAUCET_SEED</code> in your{" "}
-            <code className="font-mono">.env</code> and restart the dev server.
+            Set <code className="font-mono">VITE_MIDEN_FAUCET_SEED</code> in
+            your <code className="font-mono">.env</code> and restart the dev
+            server.
           </AlertDescription>
         </Alert>
       ) : (
@@ -79,9 +102,9 @@ export default function CreateMidenFaucetsPage() {
             Faucets are created in the order of{" "}
             <code className="font-mono">MIDEN_FAUCETS</code> (
             {MIDEN_FAUCETS.map((f) => f.symbol).join(", ")}), each 6 decimals,
-            maxSupply {MIDEN_FAUCETS[0]?.maxSupply.toLocaleString()}. The seeded
-            client makes the ids + keys reproducible. Creating them deploys on
-            first mint.
+            maxSupply {MIDEN_FAUCETS[0]?.maxSupply.toLocaleString()}.
+            Seed-derived faucet ids are NOT reproducible across stores — click
+            Export faucet files once and commit them to pin the ids everywhere.
           </AlertDescription>
         </Alert>
       )}
@@ -105,8 +128,42 @@ export default function CreateMidenFaucetsPage() {
           >
             Force re-derive (clear cache)
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => void exportFiles()}
+            disabled={busy || !seedSet}
+          >
+            Export faucet files (commit these)
+          </Button>
         </CardContent>
       </Card>
+
+      {filesBlock && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Canonical faucet files</CardTitle>
+              <CopyButton value={filesBlock} label="Copy JSON" />
+            </div>
+            <CardDescription>
+              Overwrite{" "}
+              <code className="font-mono">
+                src/constants/miden-faucet-files.json
+              </code>{" "}
+              with this JSON, and paste the ids below into{" "}
+              <code className="font-mono">MIDEN_FAUCETS</code> +{" "}
+              <code className="font-mono">miden-tokens.ts</code>. Commit both.
+              After that every browser imports these exact faucets — stable ids,
+              no duplicate tokens.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <pre className="max-h-64 overflow-auto rounded bg-muted p-3 font-mono text-xs">
+              {filesBlock}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
 
       {error && (
         <Alert variant="destructive">
@@ -125,8 +182,9 @@ export default function CreateMidenFaucetsPage() {
               <CopyButton value={idBlock} label="Copy id block" />
             </div>
             <CardDescription>
-              Optional: paste into <code className="font-mono">MIDEN_FAUCETS</code>{" "}
-              (the <code className="font-mono">faucetId</code> fields) for explorer
+              Optional: paste into{" "}
+              <code className="font-mono">MIDEN_FAUCETS</code> (the{" "}
+              <code className="font-mono">faucetId</code> fields) for explorer
               links. Minting does not need this — it derives ids from the seed.
             </CardDescription>
           </CardHeader>
@@ -140,7 +198,10 @@ export default function CreateMidenFaucetsPage() {
                 >
                   {ids[f.symbol]}
                 </span>
-                <CopyButton value={ids[f.symbol] ?? ""} label={`Copy ${f.symbol} id`} />
+                <CopyButton
+                  value={ids[f.symbol] ?? ""}
+                  label={`Copy ${f.symbol} id`}
+                />
               </div>
             ))}
             <pre className="mt-2 max-h-48 overflow-auto rounded bg-muted p-3 font-mono text-xs">
