@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Hourglass, Info } from "lucide-react";
-import { ExternalLink } from "lucide-react";
 import {
   Card,
   CardContent,
