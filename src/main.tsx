@@ -4,10 +4,16 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
+import { MidenFiSignerProvider } from "@miden-sdk/miden-wallet-adapter-react";
+import {
+  AllowedPrivateData,
+  WalletAdapterNetwork,
+} from "@miden-sdk/miden-wallet-adapter-base";
 import "@rainbow-me/rainbowkit/styles.css";
 import "./index.css";
 import FaucetsPage from "./pages/FaucetsPage.tsx";
 import FundsPage from "./pages/FundsPage.tsx";
+import ReclaimPage from "./pages/ReclaimPage.tsx";
 import OverviewPage from "./pages/OverviewPage.tsx";
 import CreateMidenFaucetsPage from "./pages/dev/CreateMidenFaucetsPage.tsx";
 import { AppLayout } from "./components/layout/AppLayout";
@@ -50,27 +56,34 @@ function App() {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={customTheme}>
-          <ChainConfigWrapper>
-            <NotificationProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route element={<AppLayout />}>
-                    <Route index element={<OverviewPage />} />
-                    <Route path="/faucets" element={<FaucetsPage />} />
-                    <Route path="/funds" element={<FundsPage />} />
-                    {import.meta.env.DEV && (
-                      <Route
-                        path="/dev/miden-faucets"
-                        element={<CreateMidenFaucetsPage />}
-                      />
-                    )}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Route>
-                </Routes>
-              </BrowserRouter>
-              <Toaster richColors position="bottom-right" />
-            </NotificationProvider>
-          </ChainConfigWrapper>
+          <MidenFiSignerProvider
+            network={WalletAdapterNetwork.Testnet}
+            appName="Epoch Dashboard"
+            allowedPrivateData={AllowedPrivateData.Assets}
+          >
+            <ChainConfigWrapper>
+              <NotificationProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route element={<AppLayout />}>
+                      <Route index element={<OverviewPage />} />
+                      <Route path="/faucets" element={<FaucetsPage />} />
+                      <Route path="/funds" element={<FundsPage />} />
+                      <Route path="/reclaim" element={<ReclaimPage />} />
+                      {import.meta.env.DEV && (
+                        <Route
+                          path="/dev/miden-faucets"
+                          element={<CreateMidenFaucetsPage />}
+                        />
+                      )}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Route>
+                  </Routes>
+                </BrowserRouter>
+                <Toaster richColors position="bottom-right" />
+              </NotificationProvider>
+            </ChainConfigWrapper>
+          </MidenFiSignerProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

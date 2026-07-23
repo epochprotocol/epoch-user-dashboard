@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Droplets, LayoutDashboard, Wallet } from "lucide-react";
+import { Droplets, LayoutDashboard, Undo2, Wallet } from "lucide-react";
 import epochLogo from "@/assets/epoch-logo.png";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ const mainNav = [
   { title: "Overview", url: "/", icon: LayoutDashboard },
   { title: "Faucets", url: "/faucets", icon: Droplets },
   { title: "My Funds", url: "/funds", icon: Wallet },
+  { title: "Reclaim", url: "/reclaim", icon: Undo2 },
 ];
 
 export function AppSidebar() {
