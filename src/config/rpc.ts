@@ -8,22 +8,27 @@ import {
   sepolia,
 } from "viem/chains";
 
+const ANKR_API_KEY = (
+  import.meta.env.VITE_ANKR_API_KEY as string | undefined
+)?.trim() ?? "";
+
+function ankrRpcUrl(network: string): string {
+  return ANKR_API_KEY
+    ? `https://rpc.ankr.com/${network}/${ANKR_API_KEY}`
+    : `https://rpc.ankr.com/${network}`;
+}
+
 /** RPC URLs for graph chains (including chains not in wagmi config). */
 export const RPC_ENDPOINTS: Record<number, string> = {
-  1: "https://rpc.ankr.com/eth/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  10: "https://rpc.ankr.com/optimism/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  137: "https://rpc.ankr.com/polygon/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  8453: "https://rpc.ankr.com/base/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  42161:
-    "https://rpc.ankr.com/arbitrum/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  11155420:
-    "https://rpc.ankr.com/optimism_sepolia/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  84532:
-    "https://rpc.ankr.com/base_sepolia/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  11155111:
-    "https://rpc.ankr.com/eth_sepolia/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  10143:
-    "https://rpc.ankr.com/monad_testnet/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
+  1: ankrRpcUrl("eth"),
+  10: ankrRpcUrl("optimism"),
+  137: ankrRpcUrl("polygon"),
+  8453: ankrRpcUrl("base"),
+  42161: ankrRpcUrl("arbitrum"),
+  11155420: ankrRpcUrl("optimism_sepolia"),
+  84532: ankrRpcUrl("base_sepolia"),
+  11155111: ankrRpcUrl("eth_sepolia"),
+  10143: ankrRpcUrl("monad_testnet"),
   129399: "https://rpc.tatara.katanarpc.com/",
   11155931: "https://testnet.riselabs.xyz",
 };
