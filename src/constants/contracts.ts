@@ -1,5 +1,13 @@
 import { COMPACT_ADDRESS } from "@epoch-protocol/epoch-intents-sdk";
-import { arbitrum, base, optimism, polygon, sepolia } from "viem/chains";
+import {
+  arbitrum,
+  base,
+  optimism,
+  polygon,
+  robinhood,
+  robinhoodTestnet,
+  sepolia,
+} from "viem/chains";
 
 // Chain configurations
 export const SUPPORTED_CHAINS = {
@@ -21,6 +29,14 @@ export const SUPPORTED_CHAINS = {
   },
   [optimism.id]: {
     name: "Optimism",
+    compactAddress: COMPACT_ADDRESS as `0x${string}`,
+  },
+  [robinhood.id]: {
+    name: "Robinhood Chain",
+    compactAddress: COMPACT_ADDRESS as `0x${string}`,
+  },
+  [robinhoodTestnet.id]: {
+    name: "Robinhood Chain Testnet",
     compactAddress: COMPACT_ADDRESS as `0x${string}`,
   },
 } as const;
