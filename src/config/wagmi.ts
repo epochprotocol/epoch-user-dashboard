@@ -9,6 +9,8 @@ import {
   optimism,
 } from "viem/chains";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { robinhood, robinhoodTestnet } from "./robinhood";
+import { getRpcUrlForChain } from "./rpc";
 
 // Configure supported chains
 const projectId = "YOUR_PROJECT_ID"; // Get from WalletConnect Cloud
@@ -21,6 +23,8 @@ export const chains = [
   arbitrum,
   base,
   optimism,
+  robinhood,
+  robinhoodTestnet,
 ] as const;
 
 // Create wagmi config using RainbowKit's getDefaultConfig
@@ -32,7 +36,10 @@ export const config = getDefaultConfig({
   transports: {
     // Use a single transport configuration for all chains
     ...Object.fromEntries(
-      chains.map((chain) => [chain.id, http(chain.rpcUrls.default.http[0])]),
+      chains.map((chain) => [
+        chain.id,
+        http(getRpcUrlForChain(chain.id) ?? chain.rpcUrls.default.http[0]),
+      ]),
     ),
   },
 });
@@ -46,4 +53,6 @@ export const CHAIN_IDS = {
   ARBITRUM: arbitrum.id,
   BASE: base.id,
   OPTIMISM: optimism.id,
+  ROBINHOOD: robinhood.id,
+  ROBINHOOD_TESTNET: robinhoodTestnet.id,
 } as const;
