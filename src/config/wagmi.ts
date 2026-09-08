@@ -7,9 +7,10 @@ import {
   arbitrum,
   base,
   optimism,
+  robinhood,
+  robinhoodTestnet,
 } from "viem/chains";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { robinhood, robinhoodTestnet } from "./robinhood";
 import { getRpcUrlForChain } from "./rpc";
 
 // Configure supported chains

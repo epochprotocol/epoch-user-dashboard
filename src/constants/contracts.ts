@@ -1,6 +1,13 @@
 import { COMPACT_ADDRESS } from "@epoch-protocol/epoch-intents-sdk";
-import { arbitrum, base, optimism, polygon, sepolia } from "viem/chains";
-import { robinhood, robinhoodTestnet } from "../config/robinhood";
+import {
+  arbitrum,
+  base,
+  optimism,
+  polygon,
+  robinhood,
+  robinhoodTestnet,
+  sepolia,
+} from "viem/chains";
 
 // Chain configurations
 export const SUPPORTED_CHAINS = {
