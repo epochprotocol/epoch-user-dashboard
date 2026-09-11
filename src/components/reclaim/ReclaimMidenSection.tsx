@@ -29,7 +29,7 @@ import { useMidenWallet } from "@/hooks/useMidenWallet";
 import { useMidenConsumableNotes } from "@/hooks/useMidenConsumableNotes";
 import { useMidenReclaim } from "@/hooks/useMidenReclaim";
 import { fetchReclaimNote, type ReclaimNoteInfo } from "@/lib/midenReclaim";
-import { MIDEN_TESTNET_EXPLORER_URL } from "@/constants/miden-faucets";
+import { MIDEN_EXPLORER_URL } from "@/lib/midenClient";
 
 const shortId = (id: string) => `${id.slice(0, 10)}…${id.slice(-6)}`;
 
@@ -361,7 +361,7 @@ function NoteResult({
             {shortId(note.noteId)}
           </span>
           <a
-            href={`${MIDEN_TESTNET_EXPLORER_URL.replace(/\/$/, "")}/note/${note.noteId}`}
+            href={`${MIDEN_EXPLORER_URL.replace(/\/$/, "")}/note/${note.noteId}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs underline text-muted-foreground"
