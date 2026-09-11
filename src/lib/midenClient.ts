@@ -1,27 +1,37 @@
 import type { MidenClient } from "@miden-sdk/miden-sdk";
-import { MIDEN_FAUCET_SEED } from "@/constants/miden-faucets";
 
-/**
- * Lazily-created, process-wide Miden testnet client, **seeded** with
- * MIDEN_FAUCET_SEED so faucet creation is deterministic (same seed + same
- * creation order ⇒ same faucet ids + keys).
- *
- * The Miden SDK is a WASM module — instantiating it is expensive and must happen
- * exactly once per tab, so we memoise the promise. A stable `storeName` keeps the
- * IndexedDB store isolated and reused across reloads.
- */
 let clientPromise: Promise<MidenClient> | null = null;
 
+const RPC_URL = import.meta.env.VITE_MIDEN_RPC_URL?.trim();
+const NOTE_TRANSPORT_URL =
+  import.meta.env.VITE_MIDEN_NOTE_TRANSPORT_URL?.trim();
+
+export const MIDEN_EXPLORER_URL = "https://testnet.midenscan.com";
+
 export function getMidenClient(): Promise<MidenClient> {
+  if (!RPC_URL || !NOTE_TRANSPORT_URL) {
+    throw new Error(
+      "VITE_MIDEN_RPC_URL and VITE_MIDEN_NOTE_TRANSPORT_URL are required",
+    );
+  }
+
   if (!clientPromise) {
     clientPromise = (async () => {
       const { MidenClient } = await import("@miden-sdk/miden-sdk");
-      return MidenClient.createTestnet({
-        seed: MIDEN_FAUCET_SEED,
-        storeName: "epoch-dashboard-miden",
+      return MidenClient.create({
+        rpcUrl: RPC_URL,
+        noteTransportUrl: NOTE_TRANSPORT_URL,
+        // Separate from legacy and worker-backed stores.
+        storeName: "epoch-dashboard-miden-testnet-faucets-local",
         autoSync: true,
+        // Faucet imports and mint execution must share one IndexedDB client.
+        useWorker: false,
       });
     })();
   }
   return clientPromise;
+}
+
+export function resetMidenClient(): void {
+  clientPromise = null;
 }

@@ -20,8 +20,7 @@ export const RPC_ENDPOINTS: Record<number, string> = {
     "https://rpc.ankr.com/optimism_sepolia/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
   84532:
     "https://rpc.ankr.com/base_sepolia/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
-  11155111:
-    "https://rpc.ankr.com/eth_sepolia/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
+  11155111: "https://eth-sepolia.g.alchemy.com/v2/alch_UUQjIhXKQMlOcldWJLMUK",
   10143:
     "https://rpc.ankr.com/monad_testnet/328f2943cccedcece01572bbf49bebb41a773bca7c6d1fdea5ca239f55e72a5b",
   129399: "https://rpc.tatara.katanarpc.com/",

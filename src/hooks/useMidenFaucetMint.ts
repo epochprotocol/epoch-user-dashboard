@@ -2,10 +2,7 @@ import { useState } from "react";
 import { parseUnits } from "viem";
 import { getMidenClient } from "@/lib/midenClient";
 import { ensureFaucets, refreshFaucetForMint } from "@/lib/midenFaucets";
-import {
-  MIDEN_FAUCETS_CONFIGURED,
-  type MidenFaucetConfig,
-} from "@/constants/miden-faucets";
+import { type MidenFaucetConfig } from "@/constants/miden-faucets";
 import { useNotification } from "./useNotification";
 
 /**
@@ -28,16 +25,6 @@ export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
   ) => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
     if (!recipientId) return;
-    if (!MIDEN_FAUCETS_CONFIGURED) {
-      showNotification({
-        type: "error",
-        title: "Faucet seed missing",
-        message: "Set VITE_MIDEN_FAUCET_SEED, then create the faucets.",
-        chainId: "miden",
-      });
-      return;
-    }
-
     setIsMinting(true);
     const pendingId = `pending-miden-mint-${faucet.symbol}`;
     showNotification({
