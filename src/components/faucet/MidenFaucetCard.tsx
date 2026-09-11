@@ -10,12 +10,12 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { MIDEN_EXPLORER_URL } from "@/lib/midenClient";
 import { Input } from "@/components/ui/input";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { useMidenFaucetMint } from "@/hooks/useMidenFaucetMint";
 import {
   isValidMidenId,
-  MIDEN_TESTNET_EXPLORER_URL,
   type MidenFaucetConfig,
 } from "@/constants/miden-faucets";
 
@@ -34,7 +34,7 @@ export function MidenFaucetCard({ faucet, recipientId }: MidenFaucetCardProps) {
   const recipientValid = isValidMidenId(recipientId);
   const faucetId = faucet.faucetId;
   const explorerUrl = faucetId
-    ? `${MIDEN_TESTNET_EXPLORER_URL.replace(/\/$/, "")}/account/${faucetId}`
+    ? `${MIDEN_EXPLORER_URL.replace(/\/$/, "")}/account/${faucetId}`
     : undefined;
 
   return (
