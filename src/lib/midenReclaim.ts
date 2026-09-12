@@ -81,10 +81,16 @@ const MIDEN_RPC_URL = (
  * already consumed/pruned, or a bad id).
  */
 export async function fetchReclaimNote(rawId: string): Promise<ReclaimLookup> {
+  if (!MIDEN_RPC_URL) {
+    return {
+      found: false,
+      currentBlock: null,
+      reason: "VITE_MIDEN_RPC_URL is required",
+    };
+  }
+
   const { RpcClient, Endpoint, NoteId } = await import("@miden-sdk/miden-sdk");
-  const endpoint = MIDEN_RPC_URL
-    ? new Endpoint(MIDEN_RPC_URL)
-    : Endpoint.testnet();
+  const endpoint = new Endpoint(MIDEN_RPC_URL);
   const rpc = new RpcClient(endpoint);
   let currentBlock: number | null = null;
   try {
@@ -165,10 +171,10 @@ export async function fetchReclaimNote(rawId: string): Promise<ReclaimLookup> {
 
 /** Latest chain height, or null if the RPC is unreachable. */
 export async function fetchCurrentBlock(): Promise<number | null> {
+  if (!MIDEN_RPC_URL) return null;
+
   const { RpcClient, Endpoint } = await import("@miden-sdk/miden-sdk");
-  const endpoint = MIDEN_RPC_URL
-    ? new Endpoint(MIDEN_RPC_URL)
-    : Endpoint.testnet();
+  const endpoint = new Endpoint(MIDEN_RPC_URL);
   const rpc = new RpcClient(endpoint);
   try {
     const header = await rpc.getBlockHeaderByNumber();
