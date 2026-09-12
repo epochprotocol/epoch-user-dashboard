@@ -71,26 +71,14 @@ export function normalizeNoteId(raw: string): string {
   return t;
 }
 
-const MIDEN_RPC_URL = (
-  import.meta.env.VITE_MIDEN_RPC_URL as string | undefined
-)?.trim();
-
 /**
  * Fetch a committed public note by id and derive its reclaim eligibility.
  * Returns `{ found: false }` when the note can't be resolved (private,
  * already consumed/pruned, or a bad id).
  */
 export async function fetchReclaimNote(rawId: string): Promise<ReclaimLookup> {
-  if (!MIDEN_RPC_URL) {
-    return {
-      found: false,
-      currentBlock: null,
-      reason: "VITE_MIDEN_RPC_URL is required",
-    };
-  }
-
   const { RpcClient, Endpoint, NoteId } = await import("@miden-sdk/miden-sdk");
-  const endpoint = new Endpoint(MIDEN_RPC_URL);
+  const endpoint = Endpoint.testnet();
   const rpc = new RpcClient(endpoint);
   let currentBlock: number | null = null;
   try {
@@ -171,10 +159,8 @@ export async function fetchReclaimNote(rawId: string): Promise<ReclaimLookup> {
 
 /** Latest chain height, or null if the RPC is unreachable. */
 export async function fetchCurrentBlock(): Promise<number | null> {
-  if (!MIDEN_RPC_URL) return null;
-
   const { RpcClient, Endpoint } = await import("@miden-sdk/miden-sdk");
-  const endpoint = new Endpoint(MIDEN_RPC_URL);
+  const endpoint = Endpoint.testnet();
   const rpc = new RpcClient(endpoint);
   try {
     const header = await rpc.getBlockHeaderByNumber();

@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { parseUnits } from "viem";
-import { getMidenClient } from "@/lib/midenClient";
-import { ensureFaucets, refreshFaucetForMint } from "@/lib/midenFaucets";
+import {
+  getMidenClient,
+  MidenOperationTimeoutError,
+  resetMidenClient,
+  withMidenTimeout,
+} from "@/lib/midenClient";
+import {
+  ensureFaucets,
+  refreshFaucetForMint,
+  resetFaucetCache,
+} from "@/lib/midenFaucets";
 import { type MidenFaucetConfig } from "@/constants/miden-faucets";
 import { useNotification } from "./useNotification";
 
@@ -38,7 +47,11 @@ export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
     });
 
     try {
-      const client = await getMidenClient();
+      const client = await withMidenTimeout(
+        "client initialization",
+        getMidenClient,
+        30_000,
+      );
       const { AccountId } = await import("@miden-sdk/miden-sdk");
 
       // Account ids arrive in hex (0x…) or bech32 (mtst1…); pick the right parser.
@@ -48,19 +61,32 @@ export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
           : AccountId.fromBech32(id.trim());
 
       // Load faucets into the keystore; returns { symbol -> in-store faucetId }.
-      const ids = await ensureFaucets(client);
+      const ids = await withMidenTimeout(
+        "faucet setup",
+        () => ensureFaucets(client),
+        45_000,
+      );
       const faucetId = ids[faucet.symbol];
       if (!faucetId) throw new Error(`No faucet resolved for ${faucet.symbol}`);
 
-      await refreshFaucetForMint(client, faucetId);
+      await withMidenTimeout(
+        "faucet refresh",
+        () => refreshFaucetForMint(client, faucetId),
+        45_000,
+      );
 
       const value = parseUnits(amount, faucet.decimals);
-      const { txId } = await client.transactions.mint({
-        account: toAccountId(faucetId),
-        to: toAccountId(recipientId),
-        amount: value,
-        type: "public",
-      });
+      const { txId } = await withMidenTimeout(
+        "mint submission",
+        () =>
+          client.transactions.mint({
+            account: toAccountId(faucetId),
+            to: toAccountId(recipientId),
+            amount: value,
+            type: "public",
+          }),
+        120_000,
+      );
 
       showNotification({
         type: "success",
@@ -72,7 +98,7 @@ export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
         autoHide: true,
       });
 
-      await client.sync();
+      await withMidenTimeout("confirmation sync", () => client.sync(), 45_000);
 
       showNotification({
         type: "success",
@@ -85,8 +111,16 @@ export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
       });
       onConfirmed?.();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to mint on Miden";
+      const timedOut = error instanceof MidenOperationTimeoutError;
+      if (timedOut) {
+        resetFaucetCache();
+        resetMidenClient();
+      }
+      const message = timedOut
+        ? "Miden did not respond in time. The mint may already be submitted; check your wallet before retrying."
+        : error instanceof Error
+          ? error.message
+          : "Failed to mint on Miden";
       showNotification({
         type: "error",
         title: "Miden mint failed",
