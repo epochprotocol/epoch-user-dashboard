@@ -17,6 +17,9 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    // The intents SDK has its own nested commons SDK. Use the dashboard's linked
+    // copy so its chain graph stays in sync with the dependency declared here.
+    dedupe: ["@epoch-protocol/epoch-commons-sdk"],
   },
   worker: {
     plugins: () => [wasm(), topLevelAwait()],
