@@ -20,6 +20,8 @@ function ankrRpcUrl(network: string): string {
 
 /** RPC URLs for graph chains (including chains not in wagmi config). */
 export const RPC_ENDPOINTS: Record<number, string> = {
+  4663: "https://rpc.mainnet.chain.robinhood.com",
+  46630: "https://rpc.testnet.chain.robinhood.com",
   1: ankrRpcUrl("eth"),
   10: ankrRpcUrl("optimism"),
   137: ankrRpcUrl("polygon"),

@@ -1,5 +1,9 @@
-import { mainnetGraph, testnetGraph } from "@epoch-protocol/epoch-intents-sdk";
+import { mainnetGraph as sdkMainnetGraph, testnetGraph as sdkTestnetGraph } from "@epoch-protocol/epoch-intents-sdk";
 import { getAddress, isAddress } from "viem";
+import { withRobinhoodGraph } from "./robinhood-graph";
+
+const mainnetGraph = withRobinhoodGraph(sdkMainnetGraph, false);
+const testnetGraph = withRobinhoodGraph(sdkTestnetGraph, true);
 
 // Graph shape from epoch-commons-sdk: tokens keyed by symbol, chains keyed by chain name
 type GraphChain = { chainId: number; explorer: string };
@@ -13,6 +17,8 @@ type EpochGraph = {
 };
 
 const MAINNET_CHAIN_IDS = new Set([
+  1, // Ethereum
+  4663, // Robinhood Chain
   8453, // Base
   10, // Optimism
   137, // Polygon
