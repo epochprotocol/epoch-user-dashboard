@@ -1,27 +1,48 @@
 import { COMPACT_ADDRESS } from "@epoch-protocol/epoch-intents-sdk";
-import { arbitrum, base, optimism, polygon, sepolia } from "viem/chains";
+import {
+  mainnet,
+  arbitrum,
+  base,
+  optimism,
+  polygon,
+  robinhood,
+  robinhoodTestnet,
+  sepolia,
+} from "viem/chains";
 
 // Chain configurations
 export const SUPPORTED_CHAINS = {
+  [mainnet.id]: {
+    name: "Ethereum",
+    compactAddress: COMPACT_ADDRESS[mainnet.id] as `0x${string}`,
+  },
   [sepolia.id]: {
     name: "Sepolia",
-    compactAddress: COMPACT_ADDRESS as `0x${string}`,
+    compactAddress: COMPACT_ADDRESS[sepolia.id] as `0x${string}`,
   },
   [polygon.id]: {
     name: "Polygon",
-    compactAddress: COMPACT_ADDRESS as `0x${string}`,
+    compactAddress: COMPACT_ADDRESS[polygon.id] as `0x${string}`,
   },
   [arbitrum.id]: {
     name: "Arbitrum",
-    compactAddress: COMPACT_ADDRESS as `0x${string}`,
+    compactAddress: COMPACT_ADDRESS[arbitrum.id] as `0x${string}`,
   },
   [base.id]: {
     name: "Base",
-    compactAddress: COMPACT_ADDRESS as `0x${string}`,
+    compactAddress: COMPACT_ADDRESS[base.id] as `0x${string}`,
   },
   [optimism.id]: {
     name: "Optimism",
-    compactAddress: COMPACT_ADDRESS as `0x${string}`,
+    compactAddress: COMPACT_ADDRESS[optimism.id] as `0x${string}`,
+  },
+  [robinhood.id]: {
+    name: "Robinhood Chain",
+    compactAddress: COMPACT_ADDRESS[robinhood.id] as `0x${string}`,
+  },
+  [robinhoodTestnet.id]: {
+    name: "Robinhood Chain Testnet",
+    compactAddress: COMPACT_ADDRESS[robinhoodTestnet.id] as `0x${string}`,
   },
 } as const;
 
