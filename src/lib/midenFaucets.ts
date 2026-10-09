@@ -45,8 +45,10 @@ export async function refreshFaucetForMint(
   await client.sync();
   try {
     await client.accounts.import(faucetId);
-  } catch {
-    // Not yet on-chain — genesis / AccountFile state is still correct.
+  } catch (error) {
+    // Fresh faucet state is local until its first confirmed transaction.
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/not found/i.test(message)) throw error;
   }
 }
 
@@ -77,6 +79,11 @@ async function importCanonicalFaucets(
 
     const file = AccountFile.deserialize(base64ToBytes(b64));
     const id = file.accountId();
+    if (id.toString().toLowerCase() !== faucet.faucetId.toLowerCase()) {
+      throw new Error(
+        `Configured ${faucet.symbol} faucet does not match its account file`,
+      );
+    }
 
     const existing = await client.accounts.get(id).catch(() => null);
     if (!existing) {
