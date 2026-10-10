@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { mintWithExpiryRecovery } from "@/lib/midenMint";
 import { parseUnits } from "viem";
 import {
   getMidenClient,
@@ -69,23 +70,26 @@ export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
       const faucetId = ids[faucet.symbol];
       if (!faucetId) throw new Error(`No faucet resolved for ${faucet.symbol}`);
 
-      await withMidenTimeout(
-        "faucet refresh",
-        () => refreshFaucetForMint(client, faucetId),
-        45_000,
-      );
-
       const value = parseUnits(amount, faucet.decimals);
-      const { txId } = await withMidenTimeout(
-        "mint submission",
+      const { txId } = await mintWithExpiryRecovery(
         () =>
-          client.transactions.mint({
-            account: toAccountId(faucetId),
-            to: toAccountId(recipientId),
-            amount: value,
-            type: "public",
-          }),
-        120_000,
+          withMidenTimeout(
+            "faucet refresh",
+            () => refreshFaucetForMint(client, faucetId),
+            45_000,
+          ),
+        () =>
+          withMidenTimeout(
+            "mint submission",
+            () =>
+              client.transactions.mint({
+                account: toAccountId(faucetId),
+                to: toAccountId(recipientId),
+                amount: value,
+                type: "public",
+              }),
+            120_000,
+          ),
       );
 
       showNotification({
@@ -93,19 +97,23 @@ export function useMidenFaucetMint(faucet: MidenFaucetConfig) {
         title: "Mint submitted",
         message: "Waiting for the network to settle the note…",
         stage: "submitted",
-        txHash: txId.toString(),
+        txHash: txId.toHex(),
         chainId: "miden",
         autoHide: true,
       });
 
-      await withMidenTimeout("confirmation sync", () => client.sync(), 45_000);
+      await withMidenTimeout(
+        "mint confirmation",
+        () => client.transactions.waitFor(txId.toHex(), { timeout: 120_000 }),
+        150_000,
+      );
 
       showNotification({
         type: "success",
         title: "Tokens minted",
         message: `Sent ${amount} ${faucet.symbol}. Sync your Miden wallet to consume the note.`,
         stage: "confirmed",
-        txHash: txId.toString(),
+        txHash: txId.toHex(),
         chainId: "miden",
         autoHide: true,
       });
