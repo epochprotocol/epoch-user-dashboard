@@ -3,6 +3,7 @@ import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import {
   baseSepolia,
   optimismSepolia,
+  robinhoodTestnet,
   sepolia,
 } from "viem/chains";
 import { TriangleAlert } from "lucide-react";
@@ -20,7 +21,12 @@ import { MidenFaucetSection } from "@/components/faucet/MidenFaucetSection";
 import { getTokensForChain, isTestnetChain } from "../config/web3";
 import { getChainName } from "../utils/chains";
 
-const TESTNETS = [sepolia, baseSepolia, optimismSepolia];
+const TESTNETS = [
+  sepolia,
+  baseSepolia,
+  optimismSepolia,
+  robinhoodTestnet,
+] as const;
 
 export default function FaucetsPage() {
   const { isConnected } = useAccount();
