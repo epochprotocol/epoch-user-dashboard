@@ -1,4 +1,4 @@
-import { mainnetGraph, testnetGraph } from "@epoch-protocol/epoch-intents-sdk";
+import { mainnetGraph, testnetGraph } from "@epoch-protocol/epoch-commons-sdk";
 import { getAddress, isAddress } from "viem";
 
 // Graph shape from epoch-commons-sdk: tokens keyed by symbol, chains keyed by chain name
@@ -12,12 +12,9 @@ type EpochGraph = {
   tokens: GraphTokens;
 };
 
-const MAINNET_CHAIN_IDS = new Set([
-  8453, // Base
-  10, // Optimism
-  137, // Polygon
-  42161, // Arbitrum
-]);
+const MAINNET_CHAIN_IDS = new Set(
+  Object.values(mainnetGraph.chains).map((chain) => chain.chainId),
+);
 
 function getGraphForChain(chainId: number): EpochGraph {
   return MAINNET_CHAIN_IDS.has(chainId)
