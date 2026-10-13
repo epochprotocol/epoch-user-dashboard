@@ -78,7 +78,8 @@ export function normalizeNoteId(raw: string): string {
  */
 export async function fetchReclaimNote(rawId: string): Promise<ReclaimLookup> {
   const { RpcClient, Endpoint, NoteId } = await import("@miden-sdk/miden-sdk");
-  const endpoint = Endpoint.testnet();
+  const rpcUrl = import.meta.env.VITE_MIDEN_RPC_URL?.trim();
+  const endpoint = rpcUrl ? new Endpoint(rpcUrl) : Endpoint.testnet();
   const rpc = new RpcClient(endpoint);
   let currentBlock: number | null = null;
   try {
@@ -160,7 +161,8 @@ export async function fetchReclaimNote(rawId: string): Promise<ReclaimLookup> {
 /** Latest chain height, or null if the RPC is unreachable. */
 export async function fetchCurrentBlock(): Promise<number | null> {
   const { RpcClient, Endpoint } = await import("@miden-sdk/miden-sdk");
-  const endpoint = Endpoint.testnet();
+  const rpcUrl = import.meta.env.VITE_MIDEN_RPC_URL?.trim();
+  const endpoint = rpcUrl ? new Endpoint(rpcUrl) : Endpoint.testnet();
   const rpc = new RpcClient(endpoint);
   try {
     const header = await rpc.getBlockHeaderByNumber();

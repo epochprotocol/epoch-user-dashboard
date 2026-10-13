@@ -45,7 +45,8 @@ export default function CreateMidenFaucetsPage() {
         <AlertTitle>Stable Testnet assets</AlertTitle>
         <AlertDescription>
           These accounts are already deployed. This page imports their committed
-          account files; it never creates replacement faucets.
+          account files; it never creates replacement faucets. Each faucet needs
+          USDCx for transaction fees before minting.
         </AlertDescription>
       </Alert>
       <Card>

@@ -20,12 +20,13 @@ export function getMidenClient(): Promise<MidenClient> {
       return MidenClient.createTestnet({
         // Separate from legacy faucet stores while preserving the same store for
         // all mint operations in this tab.
-        storeName: "epoch-dashboard-miden-testnet-faucets-local",
+        storeName: "epoch-dashboard-miden-testnet-v0171-faucets",
         // Sync explicitly around minting so an unavailable RPC cannot leave
         // client initialization pending forever.
         autoSync: false,
         // The worker keeps WASM sync/proving work off React's main thread.
         useWorker: true,
+        proverUrl: "testnet",
       });
     })();
   }
